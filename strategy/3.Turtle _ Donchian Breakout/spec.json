@@ -1,0 +1,125 @@
+{
+    "strategy_id": "turtle_donchian_daily_v1",
+    "name": "Turtle / Donchian Breakout (Daily)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_instrument",
+      "position_mode": "long_short_flat",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "frequency": "1d",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "sorting": "datetime_ascending",
+      "missing_bar_policy": "skip_signal"
+    },
+    "frozen_semantics": {
+      "indicators": {
+        "donchian": {
+          "entry_high": "MAX(high, L_entry)",
+          "entry_low": "MIN(low, L_entry)",
+          "exit_long": "MIN(low, L_exit)",
+          "exit_short": "MAX(high, L_exit)"
+        },
+        "atr": {
+          "tr": "MAX(high-low, ABS(high-close_prev), ABS(low-close_prev))",
+          "n": "SMA(TR, L_atr)"
+        }
+      },
+      "signals": {
+        "enter_long": "close_t > DC_high_t AND position_state != long",
+        "enter_short": "close_t < DC_low_t AND position_state != short",
+        "pyramiding": {
+          "enabled": true,
+          "rule_long": "close_t >= last_add_price + add_step_mult*N_entry AND units < max_units",
+          "rule_short": "close_t <= last_add_price - add_step_mult*N_entry AND units < max_units",
+          "one_unit_per_bar": true
+        },
+        "exits": {
+          "stop_loss_long": "close_t <= stop_level_t",
+          "stop_loss_short": "close_t >= stop_level_t",
+          "channel_exit_long": "close_t < DC_exit_long_t",
+          "channel_exit_short": "close_t > DC_exit_short_t"
+        },
+        "priority": ["stop_loss_exit", "channel_exit", "reversal_entry", "pyramiding_add"]
+      },
+      "execution": {
+        "signal_time": "bar_close",
+        "execution_time": "bar_close",
+        "lookahead_allowed": false
+      },
+      "position": {
+        "units": true,
+        "sizing_mode": "units_with_risk_fraction",
+        "short_selling": true,
+        "pyramiding": true
+      },
+      "risk": {
+        "stop_level_definition": {
+          "long": "entry_price - stop_mult*N_entry",
+          "short": "entry_price + stop_mult*N_entry"
+        },
+        "stop_level_update_after_add": {
+          "long": "stop_level += add_step_mult*N_entry",
+          "short": "stop_level -= add_step_mult*N_entry"
+        }
+      }
+    },
+    "tunable_parameters": {
+      "L_entry": { "type": "int", "default": 20, "min": 10, "max": 100 },
+      "L_exit": { "type": "int", "default": 10, "min": 5, "max": 60 },
+      "L_atr": { "type": "int", "default": 20, "min": 10, "max": 100 },
+      "add_step_mult": { "type": "float", "default": 0.5, "min": 0.1, "max": 2.0 },
+      "stop_mult": { "type": "float", "default": 2.0, "min": 0.5, "max": 5.0 },
+      "max_units": { "type": "int", "default": 4, "min": 1, "max": 8 },
+      "risk_fraction": { "type": "float", "default": 0.01, "min": 0.001, "max": 0.05 }
+    },
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "instrument",
+        "side",
+        "entry_time",
+        "entry_price",
+        "exit_time",
+        "exit_price",
+        "avg_entry_price",
+        "units_max",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "fill_log_fields": [
+        "fill_time",
+        "fill_price",
+        "fill_units_delta",
+        "units_after",
+        "stop_level_after"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ],
+      "audit_log_recommended_fields": [
+        "datetime",
+        "close",
+        "DC_high",
+        "DC_low",
+        "DC_exit_long",
+        "DC_exit_short",
+        "TR",
+        "N",
+        "signal",
+        "position_state",
+        "units",
+        "stop_level",
+        "last_add_price",
+        "equity"
+      ]
+    }
+  }
+  

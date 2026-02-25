@@ -1,0 +1,18 @@
+# Minimal data manifest (one market, one symbol for sample run)
+data_root: "./sample_data"
+
+markets:
+  us_daily:
+    market_id: "us_daily"
+    frequency: "1d"
+    timezone: "America/New_York"
+    base_path: "us_daily"
+    instruments:
+      - symbol: "AAPL"
+        name: "Apple Inc."
+        csv_file: "AAPL.csv"
+    csv_format:
+      columns: ["datetime", "open", "high", "low", "close", "volume"]
+      datetime_format: "%Y-%m-%d"
+      sort_by: "datetime"
+      encoding: "utf-8"

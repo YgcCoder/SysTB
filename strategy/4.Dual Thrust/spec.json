@@ -1,0 +1,116 @@
+{
+    "strategy_id": "dual_thrust_intraday_v1",
+    "name": "Dual Thrust (Intraday Replay)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_instrument",
+      "position_mode": "long_short_flat",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "streams": {
+        "daily": {
+          "frequency": "1d",
+          "required_fields": ["datetime", "open", "high", "low", "close", "volume"]
+        },
+        "intraday": {
+          "frequency": "15m",
+          "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+          "derived_from": "resample_from_1m_if_available"
+        }
+      },
+      "sorting": "datetime_ascending",
+      "alignment": {
+        "range_uses_daily_strictly_before_date": true,
+        "day_open_is_first_intraday_open": true
+      },
+      "missing_data_policy": {
+        "missing_day_open": "skip_day",
+        "insufficient_daily_history": "skip_day",
+        "intraday_gaps": "evaluate_on_available_bars"
+      }
+    },
+    "frozen_semantics": {
+      "bands": {
+        "HH": "MAX(daily.high over prior N_days)",
+        "HC": "MAX(daily.close over prior N_days)",
+        "LC": "MIN(daily.close over prior N_days)",
+        "LL": "MIN(daily.low over prior N_days)",
+        "Range": "MAX(HH - LC, HC - LL)",
+        "BuyLine": "Open_D + k1*Range",
+        "SellLine": "Open_D - k2*Range"
+      },
+      "signals": {
+        "enter_or_hold_long": "close_t > BuyLine_D",
+        "enter_or_hold_short": "close_t < SellLine_D",
+        "reversal": "if in opposite direction, close then enter",
+        "hold": "otherwise",
+        "priority": ["stop_loss_exit", "reversal_or_entry", "hold"]
+      },
+      "eod_policy": {
+        "default": "close_all",
+        "definition": "exit any open position on final intraday bar close"
+      },
+      "execution": {
+        "signal_time": "intraday_bar_close",
+        "execution_time": "intraday_bar_close",
+        "lookahead_allowed": false
+      },
+      "position": {
+        "sizing_mode": "all_in_all_out",
+        "pyramiding": false,
+        "short_selling": true
+      }
+    },
+    "tunable_parameters": {
+      "N_days": { "type": "int", "default": 5, "min": 2, "max": 60 },
+      "k1": { "type": "float", "default": 0.2, "min": 0.05, "max": 1.0 },
+      "k2": { "type": "float", "default": 0.2, "min": 0.05, "max": 1.0 },
+      "intraday_frequency": { "type": "string", "default": "15m", "enum": ["15m", "1h"] },
+      "stop_loss_pct": { "type": ["float", "null"], "default": null, "min": 0.0, "max": 0.30 },
+      "eod_close_policy": { "type": "string", "default": "close_all", "enum": ["close_all", "hold_overnight"] }
+    },
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "instrument",
+        "side",
+        "entry_time",
+        "entry_price",
+        "exit_time",
+        "exit_price",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "daily_band_log_fields": [
+        "date",
+        "Open_D",
+        "HH",
+        "HC",
+        "LC",
+        "LL",
+        "Range",
+        "BuyLine_D",
+        "SellLine_D"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ],
+      "audit_log_recommended_fields": [
+        "datetime",
+        "close",
+        "BuyLine",
+        "SellLine",
+        "signal",
+        "position_state",
+        "equity"
+      ]
+    }
+  }
+  

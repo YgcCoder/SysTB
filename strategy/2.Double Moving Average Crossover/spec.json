@@ -1,0 +1,79 @@
+{
+    "strategy_id": "dma_crossover_daily_v1",
+    "name": "Double Moving Average Crossover (Daily)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_instrument",
+      "position_mode": "long_short_flat",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "frequency": "1d",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "sorting": "datetime_ascending",
+      "missing_bar_policy": "skip_signal"
+    },
+    "frozen_semantics": {
+      "indicators": {
+        "sma_short": "SMA(close, N_short)",
+        "sma_long": "SMA(close, N_long)"
+      },
+      "signals": {
+        "enter_long": "SMA_short_t > SMA_long_t AND SMA_short_t-1 <= SMA_long_t-1",
+        "enter_short": "SMA_short_t < SMA_long_t AND SMA_short_t-1 >= SMA_long_t-1",
+        "exit_policy": "reversal_only",
+        "priority": ["stop_loss_exit", "reversal_entry"]
+      },
+      "execution": {
+        "signal_time": "bar_close",
+        "execution_time": "bar_close",
+        "lookahead_allowed": false
+      },
+      "position": {
+        "sizing_mode": "all_in_all_out",
+        "pyramiding": false,
+        "short_selling": true
+      }
+    },
+    "tunable_parameters": {
+      "N_short": { "type": "int", "default": 20, "min": 3, "max": 100 },
+      "N_long": { "type": "int", "default": 60, "min": 10, "max": 300 },
+      "stop_loss_pct": { "type": ["float", "null"], "default": null, "min": 0.0, "max": 0.30 }
+    },
+    "parameter_constraints": [
+      "N_short < N_long"
+    ],
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "instrument",
+        "entry_time",
+        "entry_price",
+        "exit_time",
+        "exit_price",
+        "side",
+        "quantity_or_notional",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ],
+      "audit_log_recommended_fields": [
+        "datetime",
+        "close",
+        "SMA_short",
+        "SMA_long",
+        "signal",
+        "position_state",
+        "equity"
+      ]
+    }
+  }
+  

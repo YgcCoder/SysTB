@@ -1,0 +1,97 @@
+{
+    "strategy_id": "rsi_macd_trend_daily_v1",
+    "name": "RSI / MACD Trend Following (Daily)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_instrument",
+      "position_mode": "long_short_flat",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "frequency": "1d",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "sorting": "datetime_ascending",
+      "missing_bar_policy": "no_signal_if_indicator_undefined"
+    },
+    "frozen_semantics": {
+      "exclusive_signal_family": true,
+      "signal_type": {
+        "allowed": ["RSI", "MACD"],
+        "must_be_fixed": true
+      },
+      "rsi_rules": {
+        "indicator": "RSI(close, rsi_period)",
+        "enter_long": "RSI_t >= rsi_upper AND RSI_t-1 < rsi_upper",
+        "enter_short": "RSI_t <= rsi_lower AND RSI_t-1 > rsi_lower",
+        "exit_policy": "reversal_only"
+      },
+      "macd_rules": {
+        "DIF": "EMA(close, macd_fast) - EMA(close, macd_slow)",
+        "DEA": "EMA(DIF, macd_signal)",
+        "enter_long": "DIF_t > DEA_t AND DIF_t-1 <= DEA_t-1",
+        "enter_short": "DIF_t < DEA_t AND DIF_t-1 >= DEA_t-1",
+        "exit_policy": "reversal_only"
+      },
+      "execution": {
+        "signal_time": "bar_close",
+        "execution_time": "bar_close",
+        "lookahead_allowed": false
+      },
+      "position": {
+        "sizing_mode": "all_in_all_out",
+        "pyramiding": false,
+        "short_selling": true
+      }
+    },
+    "tunable_parameters": {
+      "signal_type": { "type": "string", "default": "MACD", "enum": ["RSI", "MACD"] },
+  
+      "rsi_period": { "type": "int", "default": 14, "min": 2, "max": 60 },
+      "rsi_upper": { "type": "float", "default": 70.0, "min": 50.0, "max": 95.0 },
+      "rsi_lower": { "type": "float", "default": 30.0, "min": 5.0, "max": 50.0 },
+  
+      "macd_fast": { "type": "int", "default": 12, "min": 2, "max": 60 },
+      "macd_slow": { "type": "int", "default": 26, "min": 5, "max": 120 },
+      "macd_signal": { "type": "int", "default": 9, "min": 2, "max": 60 },
+  
+      "stop_loss_pct": { "type": ["float", "null"], "default": null, "min": 0.0, "max": 0.30 }
+    },
+    "parameter_constraints": [
+      "rsi_lower < rsi_upper",
+      "macd_fast < macd_slow"
+    ],
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "instrument",
+        "signal_type",
+        "entry_time",
+        "entry_price",
+        "exit_time",
+        "exit_price",
+        "side",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ],
+      "audit_log_recommended_fields": [
+        "datetime",
+        "close",
+        "signal",
+        "position_state",
+        "equity",
+        "RSI",
+        "DIF",
+        "DEA"
+      ]
+    }
+  }
+  

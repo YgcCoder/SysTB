@@ -1,0 +1,175 @@
+# SysTradeBench experiment configuration (frozen after paper submission)
+# Paper: KDD 2026 — §4.1–4.5
+
+experiment:
+  name: "SysTradeBench (SysTB)"
+  version: "1.0.0"
+  description: "Iterative build-test-patch benchmark for strategy-to-code with drift-aware diagnostics"
+
+# Frozen time splits (left-closed, right-open)
+time_splits:
+  train_dev:
+    time_min: "2020-01-01"
+    time_max: "2024-01-01"
+    description: "Training and development period"
+    allow_model_access: true
+
+  validation:
+    time_min: "2024-01-01"
+    time_max: "2025-01-01"
+    description: "Validation for hyperparameter tuning"
+    allow_model_access: true
+
+  public_test:
+    time_min: "2025-01-01"
+    time_max: "2026-01-01"
+    description: "Public test set (paper reporting)"
+    allow_model_access: false
+
+  hidden_test:
+    time_min: "2026-01-01"
+    time_max: "2026-02-01"
+    description: "Hidden test for final leaderboard freeze"
+    allow_model_access: false
+
+# Markets
+markets:
+  - market_id: "us_daily"
+    frequency: "1d"
+    timezone: "America/New_York"
+    enabled: true
+
+  - market_id: "crypto_1m"
+    frequency: "1m"
+    timezone: "UTC"
+    enabled: true
+
+  - market_id: "cn_daily"
+    frequency: "1d"
+    timezone: "Asia/Shanghai"
+    enabled: true
+
+# 12 strategies
+strategies:
+  - strategy_id: "bollinger_mean_reversion"
+    name: "Bollinger Band Mean Reversion"
+    spec_path: "../strategy/1.Bollinger Band Mean Reversion"
+    markets: ["us_daily", "crypto_1m", "cn_daily"]
+
+  - strategy_id: "double_ma_crossover"
+    name: "Double Moving Average Crossover"
+    spec_path: "../strategy/2.Double Moving Average Crossover"
+    markets: ["us_daily", "crypto_1m", "cn_daily"]
+
+  - strategy_id: "turtle_donchian"
+    name: "Turtle / Donchian Breakout"
+    spec_path: "../strategy/3.Turtle _ Donchian Breakout"
+    markets: ["us_daily", "crypto_1m", "cn_daily"]
+
+  - strategy_id: "dual_thrust"
+    name: "Dual Thrust"
+    spec_path: "../strategy/4.Dual Thrust"
+    markets: ["crypto_1m"]
+
+  - strategy_id: "r_breaker"
+    name: "R-Breaker"
+    spec_path: "../strategy/5.R-Breaker"
+    markets: ["crypto_1m"]
+
+  - strategy_id: "spread_trading"
+    name: "Spread Trading"
+    spec_path: "../strategy/6.Spread Trading"
+    markets: ["us_daily", "cn_daily"]
+
+  - strategy_id: "calendar_spread"
+    name: "Calendar Spread Arbitrage"
+    spec_path: "../strategy/7.Calendar Spread Arbitrage"
+    markets: ["us_daily"]
+
+  - strategy_id: "index_enhancement"
+    name: "Index Enhancement"
+    spec_path: "../strategy/8.Index Enhancement"
+    markets: ["us_daily", "cn_daily"]
+
+  - strategy_id: "cross_asset_momentum"
+    name: "Cross-Asset Momentum / Risk-on Risk-off Rotation"
+    spec_path: "../strategy/9.Cross-Asset Momentum _ Risk-on Risk-off Rotation"
+    markets: ["us_daily", "cn_daily"]
+
+  - strategy_id: "volatility_targeting"
+    name: "Volatility Targeting / Vol Scaling"
+    spec_path: "../strategy/10.Volatility Targeting _ Vol Scaling"
+    markets: ["us_daily", "crypto_1m", "cn_daily"]
+
+  - strategy_id: "pairs_trading"
+    name: "Pairs Trading (Z-score)"
+    spec_path: "../strategy/11.Pairs Trading (Z-score)"
+    markets: ["us_daily", "cn_daily"]
+
+  - strategy_id: "rsi_macd_trend"
+    name: "RSI / MACD Trend Following"
+    spec_path: "../strategy/12.RSI_MACD Trend Following"
+    markets: ["us_daily", "crypto_1m", "cn_daily"]
+
+# Iteration control (paper §4.5)
+iteration:
+  num_iterations: 2   # Iter0, Iter1, Iter2
+  iter0_description: "Zero-shot generation"
+  iter_n_description: "Patch-based refinement with evidence bundle (<=50 changed lines, frozen semantics)"
+  patch_policy:
+    allow_semantic_change: false
+    allow_bug_fix: true
+    allow_compliance_improvement: true
+    allow_robustness_improvement: true
+
+# Evaluation dimensions (paper §4.4)
+evaluation:
+  dimensions:
+    - dimension_id: "D1"
+      name: "Spec Fidelity"
+      weight: 1.0
+      is_hard_gate: true
+
+    - dimension_id: "D2"
+      name: "Risk Discipline"
+      weight: 1.0
+      is_hard_gate: false
+
+    - dimension_id: "D3"
+      name: "Reliability & Auditability"
+      weight: 1.0
+      is_hard_gate: true
+
+    - dimension_id: "D4"
+      name: "OOS Robustness"
+      weight: 1.0
+      is_hard_gate: false
+
+  cost_sweep:
+    fee_levels: [0.0001, 0.0005, 0.001, 0.002]
+    slippage_levels: [0.0, 0.0005, 0.001]
+
+  oos_metrics:
+    - "sharpe_ratio"
+    - "max_drawdown"
+    - "turnover"
+    - "dsr"
+    - "pbo"
+
+# Submission artifacts (paper §4.3)
+submission:
+  required_files:
+    - "strategy_card.json"
+    - "code/"
+    - "logs/trade_log.csv"
+    - "logs/audit_log.csv"
+  output_files:
+    - "reports/scorecard.json"
+    - "reports/evidence_bundle.md"
+
+# Result directory templates
+paths:
+  submission_template: "results/iter{iter_num}_submissions/{submitter_model}/{strategy_id}/"
+  review_template:     "results/iter{iter_num}_reviews/{reviewer_model}/reviews/{submitter_model}/{strategy_id}.json"
+  aggregated_template: "results/iter{iter_num}_aggregated/by_strategy/{strategy_id}/"
+  baseline_template:   "baselines/{strategy_id}/"

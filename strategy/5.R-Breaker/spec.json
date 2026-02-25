@@ -1,0 +1,130 @@
+{
+    "strategy_id": "rbreaker_intraday_v1",
+    "name": "R-Breaker (Intraday Replay)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_instrument",
+      "position_mode": "long_short_flat",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "streams": {
+        "daily": {
+          "frequency": "1d",
+          "required_fields": ["datetime", "open", "high", "low", "close", "volume"]
+        },
+        "intraday": {
+          "frequency": "15m",
+          "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+          "derived_from": "resample_from_1m_if_available"
+        }
+      },
+      "sorting": "datetime_ascending",
+      "alignment": {
+        "levels_use_immediately_prior_trading_day": true
+      },
+      "missing_data_policy": {
+        "missing_prior_day_hlc": "skip_day",
+        "intraday_gaps": "evaluate_on_available_bars"
+      }
+    },
+    "frozen_semantics": {
+      "levels": {
+        "P": "(H_prev + L_prev + C_prev) / 3",
+        "bBreak": "H_prev + 2*P - 2*L_prev",
+        "sSetup": "P + (H_prev - L_prev)",
+        "sEnter": "2*P - L_prev",
+        "bEnter": "2*P - H_prev",
+        "bSetup": "P - (H_prev - L_prev)",
+        "sBreak": "L_prev - 2*(H_prev - P)"
+      },
+      "state": {
+        "observed_high_D": "rolling_max(intraday.high within date D)",
+        "observed_low_D": "rolling_min(intraday.low within date D)",
+        "obs_sell_triggered": "observed_high_D > sSetup",
+        "obs_buy_triggered": "observed_low_D < bSetup"
+      },
+      "signals": {
+        "breakout_when_flat": {
+          "enter_long": "close_t > bBreak",
+          "enter_short": "close_t < sBreak"
+        },
+        "reversal_when_long": "obs_sell_triggered == true AND close_t < sEnter => close_long_then_enter_short",
+        "reversal_when_short": "obs_buy_triggered == true AND close_t > bEnter => close_short_then_enter_long",
+        "priority": ["stop_loss_exit", "reversal", "breakout", "hold"]
+      },
+      "eod_policy": {
+        "default": "close_all",
+        "definition": "exit any open position on final intraday bar close"
+      },
+      "execution": {
+        "signal_time": "intraday_bar_close",
+        "execution_time": "intraday_bar_close",
+        "lookahead_allowed": false
+      },
+      "position": {
+        "sizing_mode": "all_in_all_out",
+        "pyramiding": false,
+        "short_selling": true
+      }
+    },
+    "tunable_parameters": {
+      "intraday_frequency": { "type": "string", "default": "15m", "enum": ["15m", "1h"] },
+      "eod_close_policy": { "type": "string", "default": "close_all", "enum": ["close_all", "hold_overnight"] },
+      "stop_loss_mode": { "type": ["string", "null"], "default": null, "enum": ["points", "percentage", null] },
+      "stop_loss_value": { "type": ["float", "null"], "default": null, "min": 0.0, "max": 1000000.0 }
+    },
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "instrument",
+        "side",
+        "entry_time",
+        "entry_price",
+        "exit_time",
+        "exit_price",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "daily_level_log_fields": [
+        "date",
+        "H_prev",
+        "L_prev",
+        "C_prev",
+        "P",
+        "bBreak",
+        "sSetup",
+        "sEnter",
+        "bEnter",
+        "bSetup",
+        "sBreak"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ],
+      "audit_log_recommended_fields": [
+        "datetime",
+        "close",
+        "bBreak",
+        "sSetup",
+        "sEnter",
+        "bEnter",
+        "bSetup",
+        "sBreak",
+        "observed_high_D",
+        "observed_low_D",
+        "obs_sell_triggered",
+        "obs_buy_triggered",
+        "signal",
+        "position_state",
+        "equity"
+      ]
+    }
+  }
+  

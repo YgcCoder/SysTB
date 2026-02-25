@@ -1,0 +1,20 @@
+{
+  "strategy_id": "bollinger_mean_reversion",
+  "strategy_name": "Bollinger Band Mean Reversion",
+  "version": "1.0.0",
+  "description": "Mean reversion using Bollinger Bands (long only).",
+  "entry_function": {
+    "file": "strategy.py",
+    "class_or_function": "Strategy"
+  },
+  "parameters": {
+    "N": { "value": 20, "type": "int", "description": "Bollinger window" },
+    "k": { "value": 2.0, "type": "float", "description": "Band width multiplier" },
+    "stop_loss_pct": { "value": 0.10, "type": "float", "description": "Stop-loss percentage" }
+  },
+  "constraints": {},
+  "output_specification": {
+    "trade_log_columns": ["trade_id", "instrument", "entry_time", "entry_price", "exit_time", "exit_price", "side", "pnl", "pnl_pct"],
+    "audit_log_columns": ["datetime", "close", "MB", "UB", "LB", "signal", "position_state", "equity"]
+  }
+}

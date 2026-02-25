@@ -1,0 +1,72 @@
+{
+    "strategy_id": "cross_asset_momentum_roro_daily_v1",
+    "name": "Cross-Asset Momentum / Risk-on Risk-off Rotation (Daily)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "multi_asset_portfolio",
+      "position_mode": "long_only_rotation",
+      "winner_takes_all": true
+    },
+    "data": {
+      "frequency": "1d",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "alignment": "inner_join_on_datetime",
+      "missing_data_policy": {
+        "missing_asset_on_date": "exclude_asset_from_scoring",
+        "insufficient_history": "exclude_asset_from_scoring",
+        "too_few_assets": "risk_off"
+      }
+    },
+    "frozen_semantics": {
+      "momentum_score": "score_i(D) = close_i[D] / close_i[D-L] - 1",
+      "selection": "i* = argmax_i score_i(D) with deterministic tie-break",
+      "risk_off_rule": "if score_{i*}(D) < min_return_threshold then risk_off",
+      "allocation": "winner_takes_all_or_risk_off",
+      "rebalance": {
+        "frequency": "daily",
+        "signal_time": "bar_close",
+        "execution_time": "bar_close"
+      },
+      "constraints": {
+        "long_only": true,
+        "no_leverage": true
+      },
+      "execution": {
+        "lookahead_allowed": false
+      }
+    },
+    "tunable_parameters": {
+      "L": { "type": "int", "default": 60, "min": 5, "max": 252 },
+      "min_return_threshold": { "type": "float", "default": 0.0, "min": -0.1, "max": 0.1 },
+      "risk_off_policy": { "type": "string", "default": "cash", "enum": ["cash", "defensive_asset"] },
+      "defensive_asset": { "type": ["string", "null"], "default": null },
+      "min_assets_required": { "type": "int", "default": 2, "min": 1, "max": 10 }
+    },
+    "required_outputs": {
+      "rebalance_log_fields": [
+        "date",
+        "L",
+        "min_return_threshold",
+        "risk_off_policy",
+        "defensive_asset",
+        "selected_asset",
+        "selected_score",
+        "turnover",
+        "num_assets_scored"
+      ],
+      "target_weight_fields": [
+        "date",
+        "symbol",
+        "score",
+        "target_weight"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "num_rebalances",
+        "average_turnover"
+      ]
+    }
+  }
+  

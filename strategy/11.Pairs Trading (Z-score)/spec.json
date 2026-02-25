@@ -1,0 +1,76 @@
+{
+    "strategy_id": "pairs_trading_zscore_v1",
+    "name": "Pairs Trading (Z-score, Mean Reversion)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "two_assets",
+      "position_mode": "market_neutral_pair",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "frequency": "aligned",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "alignment": "inner_join_on_datetime",
+      "missing_bar_policy": "skip_signal"
+    },
+    "frozen_semantics": {
+      "spread_definition": "log(P_X) - beta*log(P_Y)",
+      "beta_default": 1.0,
+      "signals": {
+        "enter_long_pair": "z_t <= -entry_z",
+        "enter_short_pair": "z_t >= entry_z",
+        "exit": "abs(z_t) <= exit_z",
+        "priority": ["stop_loss_exit", "mean_reversion_exit", "entry"]
+      },
+      "position": {
+        "hedged": true,
+        "pyramiding": false,
+        "reversal_same_bar": false,
+        "notional_neutrality": "|notional_X| == |beta * notional_Y|"
+      },
+      "execution": {
+        "signal_time": "bar_close",
+        "execution_time": "bar_close",
+        "lookahead_allowed": false
+      }
+    },
+    "tunable_parameters": {
+      "W": { "type": "int", "default": 30, "min": 10, "max": 200 },
+      "entry_z": { "type": "float", "default": 2.0, "min": 0.5, "max": 4.0 },
+      "exit_z": { "type": "float", "default": 0.5, "min": 0.0, "max": 2.0 },
+      "stop_z": { "type": ["float", "null"], "default": null, "min": 2.5, "max": 6.0 },
+      "max_holding_bars": { "type": ["int", "null"], "default": null, "min": 1, "max": 1000 },
+      "beta": { "type": "float", "default": 1.0, "min": 0.1, "max": 5.0 }
+    },
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "asset_X",
+        "asset_Y",
+        "side",
+        "entry_time",
+        "exit_time",
+        "entry_z",
+        "exit_z",
+        "holding_bars",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "leg_fill_log_fields": [
+        "trade_id",
+        "asset",
+        "side",
+        "price",
+        "notional"
+      ],
+      "metrics": [
+        "total_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ]
+    }
+  }
+  

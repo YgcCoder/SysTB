@@ -1,0 +1,53 @@
+# models.yaml — copy this file to models.yaml and fill in your API keys.
+# NEVER commit models.yaml to git (it is in .gitignore).
+
+models:
+- model_id: gpt_5_2
+  provider: openai_compatible
+  model_name: gpt-5.2
+  api_config:
+    api_key: YOUR_API_KEY_HERE
+    base_url: https://api.openai.com/v1
+  generation_config:
+    temperature: 0.2
+    max_tokens: 8000
+    top_p: 0.95
+  enabled: true
+  use_in_iter0: true
+  use_in_iter1_2: true
+
+- model_id: o3
+  provider: openai_compatible
+  model_name: o3
+  api_config:
+    api_key: YOUR_API_KEY_HERE
+    base_url: https://api.openai.com/v1
+  generation_config:
+    max_tokens: 8000
+  enabled: true
+  use_in_iter0: true
+  use_in_iter1_2: false
+
+- model_id: claude_opus_4_5
+  provider: openai_compatible
+  model_name: claude-opus-4-5
+  api_config:
+    api_key: YOUR_API_KEY_HERE
+    base_url: https://api.openai.com/v1
+  generation_config:
+    temperature: 0.2
+    max_tokens: 8000
+  enabled: true
+  use_in_iter0: true
+  use_in_iter1_2: true
+
+# Add more models following the same pattern.
+# Supported providers: openai_compatible, anthropic, google
+
+defaults:
+  timeout: 120
+  max_retries: 3
+  retry_delay: 5
+
+prompt_templates:
+  system_prompt: prompts/system_prompt.md

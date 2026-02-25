@@ -1,0 +1,15 @@
+strategy,submitter,avg_score_D1_D2,num_reviews,rank
+bollinger_mean_reversion,gpt_5_2,7.68,17,1
+bollinger_mean_reversion,gpt_5_1,7.54,17,2
+bollinger_mean_reversion,gemini_3_pro_preview,7.46,17,3
+bollinger_mean_reversion,o3,7.38,17,4
+bollinger_mean_reversion,grok_3,7.07,17,5
+bollinger_mean_reversion,claude_opus_4_5,7.06,17,6
+bollinger_mean_reversion,grok_4_fast,7.05,17,7
+bollinger_mean_reversion,ark_deepseek_v3_1_250821,7.05,17,8
+bollinger_mean_reversion,gemini_3_flash_preview,6.94,17,9
+bollinger_mean_reversion,glm_4_6,6.88,17,10
+double_ma_crossover,gpt_5_2,8.2,17,1
+double_ma_crossover,gpt_5_1,7.5,17,2
+volatility_targeting,grok_4_fast,7.3,17,1
+volatility_targeting,gpt_5_2,7.1,17,2

@@ -1,0 +1,80 @@
+{
+    "strategy_id": "bb_mr_daily_v1",
+    "name": "Bollinger Band Mean Reversion (Daily)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_instrument",
+      "position_mode": "long_flat_only",
+      "max_concurrent_positions": 1
+    },
+    "data": {
+      "frequency": "1d",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "sorting": "datetime_ascending",
+      "missing_bar_policy": "skip_signal"
+    },
+    "frozen_semantics": {
+      "indicators": {
+        "bollinger": {
+          "middle_band": "SMA(close, N)",
+          "std": "STD(close, N)",
+          "upper_band": "MB + k*SD",
+          "lower_band": "MB - k*SD"
+        }
+      },
+      "signals": {
+        "entry_long": "close_t < LB_t AND close_t-1 >= LB_t-1",
+        "exit": "close_t >= MB_t",
+        "priority": ["stop_loss_exit", "mean_reversion_exit", "entry_long"]
+      },
+      "execution": {
+        "signal_time": "bar_close",
+        "execution_time": "bar_close",
+        "lookahead_allowed": false
+      },
+      "position": {
+        "sizing_mode": "all_in_all_out",
+        "pyramiding": false,
+        "short_selling": false
+      }
+    },
+    "tunable_parameters": {
+      "N": { "type": "int", "default": 20, "min": 5, "max": 200 },
+      "k": { "type": "float", "default": 2.0, "min": 1.0, "max": 4.0 },
+      "stop_loss_pct": { "type": "float", "default": 0.10, "min": 0.0, "max": 0.30 }
+    },
+    "required_outputs": {
+      "trade_log_fields": [
+        "trade_id",
+        "instrument",
+        "entry_time",
+        "entry_price",
+        "exit_time",
+        "exit_price",
+        "side",
+        "quantity_or_notional",
+        "pnl",
+        "pnl_pct",
+        "reason_entry",
+        "reason_exit"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "win_rate",
+        "num_trades"
+      ],
+      "audit_log_recommended_fields": [
+        "datetime",
+        "close",
+        "MB",
+        "UB",
+        "LB",
+        "signal",
+        "position_state",
+        "equity"
+      ]
+    }
+  }
+  

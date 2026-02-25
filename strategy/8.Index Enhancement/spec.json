@@ -1,0 +1,112 @@
+{
+    "strategy_id": "index_enhancement_daily_v1",
+    "name": "Index Enhancement (Daily, Long-Only Weight Tilt)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "multi_asset_portfolio",
+      "position_mode": "long_only",
+      "benchmark_required": true
+    },
+    "data": {
+      "streams": {
+        "benchmark_index": {
+          "frequency": "1d",
+          "required_fields": ["datetime", "open", "high", "low", "close"]
+        },
+        "constituents_ohlcv": {
+          "frequency": "1d",
+          "required_fields": ["datetime", "open", "high", "low", "close", "volume"]
+        },
+        "dated_weights": {
+          "required_fields": ["date", "symbol", "weight"],
+          "weight_unit": "fraction"
+        }
+      },
+      "alignment": {
+        "rebalance_uses_weights_on_same_date": true,
+        "momentum_uses_close_up_to_date": true
+      },
+      "missing_data_policy": {
+        "missing_weights_on_date": "skip_rebalance_hold_previous_targets",
+        "missing_constituent_close_on_date": "target_weight_to_zero",
+        "missing_benchmark_close_on_date": "skip_excess_return"
+      }
+    },
+    "frozen_semantics": {
+      "universe_selection": "U(D) = { i | w_i(D) >= weight_threshold }",
+      "momentum_signal": {
+        "strong": "all(diff(close[D-mom_window+1..D]) > 0)",
+        "weak": "all(diff(close[D-mom_window+1..D]) < 0)",
+        "neutral": "otherwise_or_insufficient_history"
+      },
+      "portfolio_construction": {
+        "raw_target_weight": "w_i(D) * m_i(D)",
+        "multiplier_strong": "base_ratio + delta",
+        "multiplier_weak": "base_ratio - delta",
+        "multiplier_neutral": "base_ratio",
+        "normalization_mode": {
+          "default": "cash",
+          "options": ["cash", "renormalize"]
+        }
+      },
+      "constraints": {
+        "long_only": true,
+        "no_short": true,
+        "nonnegative_weights": true,
+        "drop_non_universe_holdings_to_zero": true
+      },
+      "rebalance": {
+        "frequency": "daily",
+        "signal_time": "bar_close",
+        "execution_time": "bar_close"
+      },
+      "lookahead_allowed": false
+    },
+    "tunable_parameters": {
+      "weight_threshold": { "type": "float", "default": 0.0035, "min": 0.0, "max": 0.05 },
+      "base_ratio": { "type": "float", "default": 0.8, "min": 0.0, "max": 1.0 },
+      "delta": { "type": "float", "default": 0.2, "min": 0.0, "max": 0.5 },
+      "mom_window": { "type": "int", "default": 5, "min": 2, "max": 60 },
+      "normalization_mode": { "type": "string", "default": "cash", "enum": ["cash", "renormalize"] },
+      "TE_window": { "type": "int", "default": 252, "min": 20, "max": 1000 }
+    },
+    "required_outputs": {
+      "rebalance_log_fields": [
+        "date",
+        "universe_size",
+        "normalization_mode",
+        "base_ratio",
+        "delta",
+        "mom_window",
+        "weight_threshold",
+        "sum_raw_target",
+        "turnover",
+        "num_strong",
+        "num_weak",
+        "num_neutral"
+      ],
+      "holdings_log_fields": [
+        "date",
+        "symbol",
+        "index_weight",
+        "signal",
+        "raw_target_weight",
+        "target_weight"
+      ],
+      "portfolio_outputs": [
+        "equity_curve",
+        "benchmark_curve",
+        "excess_return_series"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "max_drawdown",
+        "average_excess_return",
+        "tracking_error",
+        "information_ratio",
+        "average_turnover"
+      ]
+    }
+  }
+  

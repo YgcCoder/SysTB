@@ -1,0 +1,80 @@
+{
+    "strategy_id": "vol_targeting_daily_v1",
+    "name": "Volatility Targeting / Vol Scaling (Daily)",
+    "version": "1.0",
+    "universe": {
+      "asset_scope": "single_asset_with_cash",
+      "position_mode": "long_only_scaled",
+      "leverage_allowed": false
+    },
+    "data": {
+      "frequency": "1d",
+      "required_fields": ["datetime", "open", "high", "low", "close", "volume"],
+      "alignment": "datetime_sorted",
+      "missing_data_policy": {
+        "insufficient_history": "hold_previous_exposure",
+        "missing_prev_close": "skip_update"
+      }
+    },
+    "frozen_semantics": {
+      "returns": "r[D] = close[D] / close[D-1] - 1",
+      "volatility": {
+        "daily": "std(r[D-L_vol+1 .. D])",
+        "annualized": "sigma_daily * sqrt(annualization_factor)"
+      },
+      "exposure_rule": {
+        "raw": "target_vol / sigma_ann",
+        "capped": "min(raw, max_exposure)"
+      },
+      "allocation": {
+        "asset_weight": "exposure",
+        "cash_weight": "1 - exposure"
+      },
+      "rebalance": {
+        "frequency": "daily",
+        "signal_time": "bar_close",
+        "execution_time": "bar_close"
+      },
+      "constraints": {
+        "long_only": true,
+        "no_short": true,
+        "max_exposure_enforced": true
+      },
+      "execution": {
+        "lookahead_allowed": false
+      }
+    },
+    "tunable_parameters": {
+      "L_vol": { "type": "int", "default": 20, "min": 5, "max": 252 },
+      "target_vol": { "type": "float", "default": 0.10, "min": 0.02, "max": 0.40 },
+      "max_exposure": { "type": "float", "default": 1.0, "min": 0.1, "max": 2.0 },
+      "annualization_factor": { "type": "int", "default": 252, "enum": [252, 365] }
+    },
+    "required_outputs": {
+      "rebalance_log_fields": [
+        "date",
+        "L_vol",
+        "target_vol",
+        "max_exposure",
+        "sigma_daily",
+        "sigma_ann",
+        "raw_exposure",
+        "final_exposure",
+        "turnover"
+      ],
+      "target_weight_fields": [
+        "date",
+        "asset_weight",
+        "cash_weight"
+      ],
+      "metrics": [
+        "total_return",
+        "annualized_return",
+        "realized_volatility",
+        "volatility_error",
+        "max_drawdown",
+        "average_turnover"
+      ]
+    }
+  }
+  
