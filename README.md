@@ -3,7 +3,7 @@
 
 **SysTradeBench** is the first benchmark to apply an iterative build–test–patch protocol with frozen-semantics constraints and drift-aware diagnostics for evaluating LLMs on full strategy-to-code generation in quantitative trading, featuring sandboxed execution, validity gates, and a cross-model arena.
 
-> *SysTradeBench: An Iterative Build–Test–Patch Benchmark for Strategy-to-Code Trading Systems with Drift-Aware Diagnostics.* **KDD 2026.**
+
 
 ---
 
