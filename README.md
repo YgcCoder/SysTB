@@ -3,7 +3,7 @@
 
 **SysTradeBench** is the first benchmark to apply an iterative build–test–patch protocol with frozen-semantics constraints and drift-aware diagnostics for evaluating LLMs on full strategy-to-code generation in quantitative trading, featuring sandboxed execution, validity gates, and a cross-model arena.
 
-
+> *SysTradeBench: An Iterative Build–Test–Patch Benchmark for Strategy-to-Code Trading Systems with Drift-Aware Diagnostics.*
 
 ---
 
@@ -245,7 +245,7 @@ Among 235 sampled OOS tests: **217 (92.3%) execute successfully**, 18 (7.7%) enc
 
 ### Figure 2 — RQ3: Evidence-Driven Repair Trajectories
 
-<img src="docs/figures/figure2_learning_curves.png" width="680" alt="Learning Curves">
+<img src="docs/figures/figure2_learning_curves.png" width="460" alt="Learning Curves">
 
 Learning curves for 3 top models (GPT-5.2, o3, Grok-4 Fast) across 4 iterations on Bollinger Mean Reversion:
 - **Iter0→Iter1**: largest quality jump (+0.42 avg), dominated by D4 (+0.70) and D3 (+0.25) gains
@@ -288,9 +288,25 @@ Sample rankings for 3 representative strategies: [`results/arena/cross_eval_rank
 
 ## Data
 
-The benchmark uses **2024–2025 data** (24 months) across US daily equities, A-share daily, and crypto 1-min markets — 14 instruments total. Frozen time splits: Train/Dev 2024-01-01 ~ 2025-01-01, Test (OOS) 2025-01-01 ~ 2026-01-01.  
-`sample_data/us_daily/AAPL.csv` is included for quick testing.  
-To run the full benchmark, place your OHLCV CSVs per `configs/data_manifest.yaml`.
+The benchmark uses **2024–2025 data** (24 months, Train: 2024-01-01 ~ 2025-01-01 / Test OOS: 2025-01-01 ~ 2026-01-01) across 14 instruments in three markets:
+
+| Market | Instruments | Freq | Rows/asset |
+|--------|------------|------|------------|
+| **US Equities** | AAPL · MSFT · GOOGL · AMZN · TSLA | Daily | ~502 |
+| **A-Shares** | 600519 (Moutai) · 300750 (CATL) · 600036 (CMB) · 000333 (Midea) · 002594 (BYD) | Daily | ~485 |
+| **Crypto** | BTC/USDT · ETH/USDT · BNB/USDT | Daily | ~367 |
+
+All data files are included in this repository under `data/` (~308 KB total):
+
+| Folder | Files | Download |
+|--------|-------|----------|
+| `data/us_daily/` | Daily OHLCV 2024-2025, ~502 rows/stock | [AAPL](data/us_daily/AAPL.csv) · [MSFT](data/us_daily/MSFT.csv) · [GOOGL](data/us_daily/GOOGL.csv) · [AMZN](data/us_daily/AMZN.csv) · [TSLA](data/us_daily/TSLA.csv) |
+| `data/cn_daily/` | Daily OHLCV 2024-2025, ~485 rows/stock | [600519](data/cn_daily/600519_SS.csv) · [300750](data/cn_daily/300750_SZ.csv) · [600036](data/cn_daily/600036_SS.csv) · [000333](data/cn_daily/000333_SZ.csv) · [002594](data/cn_daily/002594_SZ.csv) |
+| `data/crypto_daily/` | Daily OHLCV 2024-2025, ~367 rows/pair | [BTCUSDT](data/crypto_daily/BTCUSDT.csv) · [ETHUSDT](data/crypto_daily/ETHUSDT.csv) · [BNBUSDT](data/crypto_daily/BNBUSDT.csv) |
+| `data/crypto_1min_sample/` | 1-min OHLCV **Jan 2024** sample, ~44K rows/pair | [BTCUSDT](data/crypto_1min_sample/BTCUSDT_1min_sample.csv) · [ETHUSDT](data/crypto_1min_sample/ETHUSDT_1min_sample.csv) · [BNBUSDT](data/crypto_1min_sample/BNBUSDT_1min_sample.csv) |
+
+> **Full 1-min data** (required for Dual Thrust / R-Breaker, ~525K rows/asset/year) is too large for GitHub.  
+> Download monthly ZIPs directly from [Binance Data Vision](https://data.binance.vision/?prefix=data/spot/monthly/klines/) (no account needed) — see [`data/crypto_1min_sample/README.md`](data/crypto_1min_sample/README.md) for step-by-step instructions.
 
 ---
 
@@ -303,6 +319,8 @@ pip install -r requirements.txt
 ```
 
 > `configs/models.yaml` (API keys) is `.gitignore`d. Never commit it. Use `configs/models.yaml.template`.
+
+---
 
 ---
 
