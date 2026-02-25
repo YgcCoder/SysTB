@@ -298,7 +298,7 @@ The benchmark uses **2024–2025 data** (24 months, Train: 2024-01-01 ~ 2025-01-
 
 All data files are included in this repository under `data/` (~308 KB total):
 
-| Folder | Files | Download |
+| Folder | Files | Link |
 |--------|-------|----------|
 | `data/us_daily/` | Daily OHLCV 2024-2025, ~502 rows/stock | [AAPL](data/us_daily/AAPL.csv) · [MSFT](data/us_daily/MSFT.csv) · [GOOGL](data/us_daily/GOOGL.csv) · [AMZN](data/us_daily/AMZN.csv) · [TSLA](data/us_daily/TSLA.csv) |
 | `data/cn_daily/` | Daily OHLCV 2024-2025, ~485 rows/stock | [600519](data/cn_daily/600519_SS.csv) · [300750](data/cn_daily/300750_SZ.csv) · [600036](data/cn_daily/600036_SS.csv) · [000333](data/cn_daily/000333_SZ.csv) · [002594](data/cn_daily/002594_SZ.csv) |
